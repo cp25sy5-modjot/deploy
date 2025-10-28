@@ -1,0 +1,9 @@
+_format_version: "3.0"
+services:
+  - name: main
+    url: http://main-service:8081
+    routes:
+      - name: api
+        paths: [ "/api" ]
+        strip_path: true
+        protocols: [ http, https ]

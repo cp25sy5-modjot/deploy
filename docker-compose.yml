@@ -1,0 +1,100 @@
+services:
+  postgres-db:
+    image: postgres:16
+    container_name: postgres-db
+    env_file: ./.env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  pg-admin:
+    image: dpage/pgadmin4:8
+    container_name: pg-admin
+    env_file: ./.env
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SESSION_EXPIRATION_TIME=${PGADMIN_CONFIG_SESSION_EXPIRATION_TIME}
+      - PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME=${PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+
+  ai-wrapper-service:
+    image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:main
+    container_name: ai-wrapper-service
+    env_file: ./.env
+    environment:
+      - GRPC_ADDR=:50061
+    expose:
+      - "50061"
+    healthcheck:
+      test: ["CMD", "bash", "-lc", "true"] # replace with grpc_health_probe in prod
+
+  main-service:
+    image: ghcr.io/cp25sy5-modjot/main-service:main
+    container_name: main-service
+    env_file: ./.env
+    environment:
+      # Web server bind
+      - HTTP_ADDR=${HTTP_ADDR}
+      # gRPC upstream
+      - AI_WRAPPER_ADDR=${AI_WRAPPER_ADDR}
+      # Fiber envs your app may read
+      - APP_ENV=${APP_ENV}
+      - FIBER_HOST=${FIBER_HOST}
+      - FIBER_PORT=${FIBER_PORT}
+      # DB envs your app may read
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PROTOCOL=${POSTGRES_PROTOCOL}
+      - POSTGRES_SSL_MODE=${POSTGRES_SSL_MODE}
+      # Google OAuth
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_REDIRECT_URL=${GOOGLE_REDIRECT_URL}
+      # JWT
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL}
+      - REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL}
+      - JWT_ISSUER=${JWT_ISSUER}
+    depends_on:
+      ai-wrapper-service:
+        condition: service_started
+      postgres-db:
+        condition: service_healthy
+    ports:
+      # expose directly for local dev (Kong also fronts it below)
+      - "8081:8081"
+
+  kong:
+    image: kong:3.7
+    container_name: kong
+    environment:
+      - KONG_DATABASE=off
+      - KONG_DECLARATIVE_CONFIG=/kong/kong.yml
+    volumes:
+      - ./kong/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "80:8000"
+      - "443:8443"
+    depends_on:
+      - main-service
+
+volumes:
+  pgdata:

@@ -1,0 +1,62 @@
+# .github/workflows/deploy.yml
+name: deploy
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  up:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # login to GHCR if images are private
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Create .env from GitHub Variables/Secrets
+      - name: Create .env
+        working-directory: ./
+        run: |
+          cat > .env <<'EOF'
+          APP_ENV=${{ vars.APP_ENV || 'dev' }}
+          FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
+          FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
+
+          POSTGRES_HOST=${{ vars.POSTGRES_HOST || 'postgres-db' }}
+          POSTGRES_PORT=${{ vars.POSTGRES_PORT || '5432' }}
+          POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB=${{ vars.POSTGRES_DB || 'modjot' }}
+          POSTGRES_PROTOCOL=${{ vars.POSTGRES_PROTOCOL || 'tcp' }}
+          POSTGRES_SSL_MODE=${{ vars.POSTGRES_SSL_MODE || 'disable' }}
+
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+
+          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
+          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
+          ACCESS_TOKEN_TTL=${{ vars.ACCESS_TOKEN_TTL || '30m' }}
+          REFRESH_TOKEN_TTL=${{ vars.REFRESH_TOKEN_TTL || '720h' }}
+          JWT_ISSUER=${{ vars.JWT_ISSUER || 'modjot' }}
+
+          PGADMIN_DEFAULT_EMAIL=${{ secrets.PGADMIN_DEFAULT_EMAIL }}
+          PGADMIN_DEFAULT_PASSWORD=${{ secrets.PGADMIN_DEFAULT_PASSWORD }}
+          PGADMIN_PORT=${{ vars.PGADMIN_PORT || '5050' }}
+          PGADMIN_CONFIG_SESSION_EXPIRATION_TIME=${{ vars.PGADMIN_CONFIG_SESSION_EXPIRATION_TIME || '1800' }}
+          PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME=${{ vars.PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME || '1800' }}
+
+          AI_WRAPPER_ADDR=${{ vars.AI_WRAPPER_ADDR || 'ai-wrapper-service:50061' }}
+          HTTP_ADDR=${{ vars.HTTP_ADDR || ':8081' }}
+          EOF
+
+          echo "Wrote .env (non-secret lines):"
+          grep -E '^(APP_ENV|FIBER_HOST|FIBER_PORT|POSTGRES_HOST|POSTGRES_PORT|POSTGRES_DB|AI_WRAPPER_ADDR|HTTP_ADDR)=' .env || true
+
+      - name: Compose up
+        run: |
+          docker compose pull
+          docker compose up -d
