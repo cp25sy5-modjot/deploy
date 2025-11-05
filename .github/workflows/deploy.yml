@@ -1,28 +1,36 @@
 # .github/workflows/deploy.yml
-name: deploy
+name: Deploy to VM
+
 on:
-  workflow_dispatch:
   push:
     branches: [ main ]
+  workflow_dispatch:   # allow manual deploy too
+
+permissions:
+  contents: read
+  packages: read
 
 jobs:
-  up:
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      # login to GHCR if images are private
-      - uses: docker/login-action@v3
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # (Optional) Login to GHCR if image is private
+      - name: Login to GHCR
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Create .env from GitHub Variables/Secrets
+      # Create the .env file from secrets & vars
       - name: Create .env
-        working-directory: ./
         run: |
           cat > .env <<'EOF'
+          AI_WRAPPER_ADDR=${{ vars.AI_WRAPPER_ADDR || 'ai-wrapper-service:50051' }}
           APP_ENV=${{ vars.APP_ENV || 'dev' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
@@ -54,9 +62,34 @@ jobs:
           EOF
 
           echo "Wrote .env (non-secret lines):"
-          grep -E '^(APP_ENV|FIBER_HOST|FIBER_PORT|POSTGRES_HOST|POSTGRES_PORT|POSTGRES_DB|AI_WRAPPER_ADDR|HTTP_ADDR)=' .env || true
+          grep -E '^(APP_ENV|FIBER_HOST|FIBER_PORT|POSTGRES_HOST|POSTGRES_PORT|POSTGRES_DB)' .env || true
+      - name: Upload compose & env
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: |
+            docker-compose.dev.yml
+            docker-compose.prod.yml
+            .env
+            Makefile
+          target: /srv/modjot
 
-      - name: Compose up
-        run: |
-          docker compose pull
-          docker compose up -d
+      - name: Deploy on VM (prod)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /srv/modjot
+            # login only if your GHCR image is private/internal
+            if [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
+              echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
+            fi
+            make prod
+            docker image prune -af --filter "until=72h" || true
+
