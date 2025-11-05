@@ -61,7 +61,7 @@ jobs:
             \( -name 'docker-compose*.yml' -o -name '.env' -o -name 'Makefile' -o -name 'kong.yml' \) \
             -printf 'FOUND: %p\n'
 
-      # Ensure the target directory exists on the VM
+      # Ensure target dir exists
       - name: Prepare remote dir
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -69,10 +69,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
-          script: |
-            mkdir -p /modjot
+          script: mkdir -p /modjot
 
-      # Upload compose, env, kong config, Makefile (NOTE: explicit ./ paths)
+      # Upload files (NOTE the ./ prefixes)
       - name: Upload compose & env
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -81,15 +80,15 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           source: |
+            ./.env
             ./docker-compose.prod.yml
             ./Makefile
             ./kong/kong.yml
-            ./.env
           target: /modjot
           overwrite: true
           strip_components: 0
+          debug: true
 
-      # Deploy on the VM (pull images and start prod stack)
       - name: Deploy on VM (prod)
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -101,9 +100,9 @@ jobs:
           script: |
             set -e
             cd /modjot
-            # login only if your GHCR images are private/internal
             if [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
               echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
             fi
             make prod
             docker image prune -af --filter "until=72h" || true
+
