@@ -1,10 +1,9 @@
-# .github/workflows/deploy.yml
 name: Deploy to VM
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # allow manual deploy too
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,19 +17,10 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # (Optional) Login to GHCR if image is private
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      # Create the .env file from secrets & vars
+      # Create .env from repo vars/secrets (builds it in the runner workspace)
       - name: Create .env
         run: |
           cat > .env <<'EOF'
-          AI_WRAPPER_ADDR=${{ vars.AI_WRAPPER_ADDR || 'ai-wrapper-service:50051' }}
           APP_ENV=${{ vars.APP_ENV || 'dev' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
@@ -57,39 +47,63 @@ jobs:
           PGADMIN_CONFIG_SESSION_EXPIRATION_TIME=${{ vars.PGADMIN_CONFIG_SESSION_EXPIRATION_TIME || '1800' }}
           PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME=${{ vars.PGADMIN_CONFIG_MAX_SESSION_IDLE_TIME || '1800' }}
 
-          AI_WRAPPER_ADDR=${{ vars.AI_WRAPPER_ADDR || 'ai-wrapper-service:50061' }}
+          AI_WRAPPER_ADDR=${{ vars.AI_WRAPPER_ADDR || 'ai-wrapper-service:50051' }}
           HTTP_ADDR=${{ vars.HTTP_ADDR || ':8081' }}
           EOF
 
-          echo "Wrote .env (non-secret lines):"
-          grep -E '^(APP_ENV|FIBER_HOST|FIBER_PORT|POSTGRES_HOST|POSTGRES_PORT|POSTGRES_DB)' .env || true
+      # Quick sanity check so we never upload an “empty archive”
+      - name: Debug workspace
+        run: |
+          echo "PWD: $(pwd)"
+          ls -lah
+          echo "--- find important files ---"
+          find . -maxdepth 2 -type f \
+            \( -name 'docker-compose*.yml' -o -name '.env' -o -name 'Makefile' -o -name 'kong.yml' \) \
+            -printf 'FOUND: %p\n'
+
+      # Ensure the target directory exists on the VM
+      - name: Prepare remote dir
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            mkdir -p /modjot
+
+      # Upload compose, env, kong config, Makefile (NOTE: explicit ./ paths)
       - name: Upload compose & env
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
           source: |
-            docker-compose.dev.yml
-            docker-compose.prod.yml
-            .env
-            Makefile
+            ./docker-compose.prod.yml
+            ./Makefile
+            ./kong/kong.yml
+            ./.env
           target: /modjot
+          overwrite: true
+          strip_components: 0
 
+      # Deploy on the VM (pull images and start prod stack)
       - name: Deploy on VM (prod)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
           script_stop: true
           script: |
             set -e
             cd /modjot
-            # login only if your GHCR image is private/internal
+            # login only if your GHCR images are private/internal
             if [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
               echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
             fi
             make prod
             docker image prune -af --filter "until=72h" || true
-
