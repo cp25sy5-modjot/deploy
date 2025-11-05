@@ -1,4 +1,5 @@
-name: Deploy to VM
+# .github/workflows/deploy.yml
+name: Deploy to VM (self-hosted)
 
 on:
   push:
@@ -7,21 +8,19 @@ on:
 
 permissions:
   contents: read
-  packages: read
+  packages: read    # needed to pull from GHCR with GITHUB_TOKEN
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-
+    runs-on: [self-hosted, linux, modjot-vm]  # <- matches your runner labels
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Create .env from repo vars/secrets (builds it in the runner workspace)
-      - name: Create .env
+      - name: Create .env from repo vars/secrets
         run: |
           cat > .env <<'EOF'
-          APP_ENV=${{ vars.APP_ENV || 'dev' }}
+          APP_ENV=${{ vars.APP_ENV || 'prod' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
 
@@ -51,58 +50,24 @@ jobs:
           HTTP_ADDR=${{ vars.HTTP_ADDR || ':8081' }}
           EOF
 
-      # Quick sanity check so we never upload an “empty archive”
-      - name: Debug workspace
+      - name: Stage deploy files into /modjot
         run: |
-          echo "PWD: $(pwd)"
-          ls -lah
-          echo "--- find important files ---"
-          find . -maxdepth 2 -type f \
-            \( -name 'docker-compose*.yml' -o -name '.env' -o -name 'Makefile' -o -name 'kong.yml' \) \
-            -printf 'FOUND: %p\n'
+          mkdir -p /modjot/kong
+          cp -f .env docker-compose.prod.yml Makefile /modjot/
+          cp -f kong/kong.yml /modjot/kong/kong.yml
+          ls -lah /modjot /modjot/kong
 
-      # Ensure target dir exists
-      - name: Prepare remote dir
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script: mkdir -p /modjot
+      - name: Login to GHCR (only needed if your images are private/internal)
+        env:
+          CR_PAT: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$CR_PAT" ]; then
+            echo "$CR_PAT" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
+          fi
 
-      # Upload files (NOTE the ./ prefixes)
-      - name: Upload compose & env
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          source: |
-            ./.env
-            ./docker-compose.prod.yml
-            ./Makefile
-            ./kong/kong.yml
-          target: /modjot
-          overwrite: true
-          strip_components: 0
-          debug: true
-
-      - name: Deploy on VM (prod)
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
-          script_stop: true
-          script: |
-            set -e
-            cd /modjot
-            if [ -n "${{ secrets.GHCR_READ_TOKEN }}" ]; then
-              echo "${{ secrets.GHCR_READ_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
-            fi
-            make prod
-            docker image prune -af --filter "until=72h" || true
-
+      - name: Deploy (pull & up without build)
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --no-build
+          docker image prune -af --filter "until=72h" || true
