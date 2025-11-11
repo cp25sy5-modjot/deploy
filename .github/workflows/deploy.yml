@@ -3,7 +3,7 @@ name: Deploy to VM (self-hosted)
 
 on:
   push:
-    branches: [ main ]
+    branches: [ develop ]
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
       - name: Create .env from repo vars/secrets
         run: |
           cat > .env <<'EOF'
-          APP_ENV=${{ vars.APP_ENV || 'prod' }}
+          APP_ENV=${{ vars.APP_ENV || 'dev' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
 
@@ -53,7 +53,7 @@ jobs:
       - name: Stage deploy files into /modjot
         run: |
           mkdir -p /modjot/kong
-          cp -f .env docker-compose.prod.yml Makefile /modjot/
+          cp -f .env docker-compose.dev.yml Makefile /modjot/
           cp -f kong/kong.yml /modjot/kong/kong.yml
           ls -lah /modjot /modjot/kong
 
@@ -68,6 +68,6 @@ jobs:
       - name: Deploy (pull & up without build)
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --no-build
+          docker compose -f docker-compose.dev.yml pull
+          docker compose -f docker-compose.dev.yml up -d --no-build
           docker image prune -af --filter "until=72h" || true
