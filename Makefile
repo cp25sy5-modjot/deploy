@@ -14,3 +14,6 @@ prod:
 	docker compose -f docker-compose.prod.yml up -d --no-build
 prod-down:
 	docker compose -f docker-compose.prod.yml down
+
+clear:
+	docker system prune -a --volumes -f
