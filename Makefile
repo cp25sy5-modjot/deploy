@@ -15,5 +15,5 @@ prod:
 prod-down:
 	docker compose -f docker-compose.prod.yml down
 
-clear:
+clean:
 	docker system prune -a --volumes -f
