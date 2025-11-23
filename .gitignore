@@ -33,3 +33,6 @@ go.work.sum
 
 # go sum
 go.sum
+
+# ollama models
+ollama/models/

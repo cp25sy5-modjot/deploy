@@ -1,4 +1,4 @@
-_format_version: "3.0"
+_format_version: '3.0'
 
 services:
     - name: main-service
@@ -7,4 +7,29 @@ services:
           - name: main-service-route
             paths:
                 - /api/main-service
+            strip_path: true
+
+    # to be removed in prod
+    - name: pg-admin
+      url: http://pg-admin:80
+      routes:
+          - name: pg-admin-route
+            paths:
+                - /pg-admin
+            strip_path: true
+
+    - name: ai-service
+      url: http://ai-service:50051
+      routes:
+          - name: ai-service-route
+            paths:
+                - /api/ai-service
+            strip_path: true
+
+    - name: modjot-ai
+      url: http://modjot-ai:11434
+      routes:
+          - name: modjot-ai-route
+            paths:
+                - /api/modjot-ai
             strip_path: true
