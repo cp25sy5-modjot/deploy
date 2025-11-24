@@ -35,4 +35,4 @@ go.work.sum
 go.sum
 
 # ollama models
-ollama/models/
+ollama/model/*

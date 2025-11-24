@@ -51,6 +51,7 @@ jobs:
           GRPC_ADDR=${{ vars.GRPC_ADDR || ':50051' }}
           OPENTYPHOON_API_KEY=${{ secrets.OPENTYPHOON_API_KEY }}
           OLLAMA_PORT=${{ vars.OLLAMA_PORT || '11434' }}
+          OLLAMA_API_URL=${{ vars.OLLAMA_API_URL || 'modjot-ai:11434' }}
           EOF
 
       - name: Stage deploy files into /modjot
