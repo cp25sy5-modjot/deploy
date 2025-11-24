@@ -68,6 +68,15 @@ jobs:
 
           ls -lah /modjot /modjot/kong
 
+      - name: Set Host Environment Variables for Docker Compose
+        # This step exports the required variable to the shell environment
+        # so that it is available when `docker compose up` runs.
+        run: |
+          # Read HOST_IP from the .env file created in the previous step
+          HOST_IP=$(grep HOST_IP= .env | cut -d '=' -f2)
+          echo "HOST_IP is set to: $HOST_IP"
+          export HOST_IP # Make it available to subsequent steps
+
       - name: Login to GHCR (only needed if your images are private/internal)
         env:
           CR_PAT: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
