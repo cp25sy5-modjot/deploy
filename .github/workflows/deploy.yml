@@ -60,8 +60,8 @@ jobs:
           mkdir -p /modjot/ollama
           cp -f .env docker-compose.prod.yml Makefile /modjot/
           cp -f kong/kong.yml /modjot/kong/kong.yml
-          cp -f ollama/ollama/Modelfile /modjot/ollama/Modelfile
-          cp -f ollama/ollama/run_ollama.sh /modjot/ollama/run_ollama.sh
+          cp -f ollama/Modelfile /modjot/ollama/Modelfile
+          cp -f ollama/run_ollama.sh /modjot/ollama/run_ollama.sh
           chmod +x /modjot/ollama/run_ollama.sh
 
           ls -lah /modjot /modjot/kong /modjot/ollama
