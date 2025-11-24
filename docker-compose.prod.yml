@@ -51,14 +51,14 @@ services:
       start_period: 5s
     ports:
       - "${GRPC_ADDR}:50051"
-  
+
   # modjot-ai:
   #   image: ollama/ollama:latest
   #   container_name: modjot-ai
   #   ports:
   #     - "${OLLAMA_PORT}:11434"
   #   volumes:
-  #     - ./ollama:/app 
+  #     - ./ollama:/app
   #   entrypoint: ["/bin/bash", "/app/run_ollama.sh"]
 
   kong:
@@ -66,11 +66,8 @@ services:
     container_name: kong
     depends_on:
       - main-service
-    environment:
-      - KONG_DATABASE=off
-      - KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yml
-      - KONG_PROXY_LISTEN=0.0.0.0:8000,0.0.0.0:8443 ssl
-      - KONG_ADMIN_LISTEN=0.0.0.0:8001
+    env_file:
+      - .env
     volumes:
       - ./kong/kong.yml:/etc/kong/kong.yml:ro
     ports:

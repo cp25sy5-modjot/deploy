@@ -27,7 +27,7 @@ services:
             strip_path: true
 
     - name: modjot-ai
-      url: http://localhost:11434
+      url: http://${OLLAMA_HOST_IP}:11434
       routes:
           - name: modjot-ai-route
             paths:
