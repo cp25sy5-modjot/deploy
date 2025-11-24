@@ -27,7 +27,7 @@ services:
             strip_path: true
 
     - name: modjot-ai
-      url: http://${HOST_IP}:11434
+      url: http://10.4.56.53:11434
       routes:
           - name: modjot-ai-route
             paths:
