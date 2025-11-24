@@ -3,23 +3,18 @@ _format_version: '3.0'
 services:
     - name: main-service
       url: http://main-service:8081
+      connect_timeout: 360000 
+      read_timeout: 360000
       routes:
           - name: main-service-route
             paths:
                 - /api/main-service
             strip_path: true
 
-    # to be removed in prod
-    - name: pg-admin
-      url: http://pg-admin:80
-      routes:
-          - name: pg-admin-route
-            paths:
-                - /pg-admin
-            strip_path: true
-
     - name: ai-service
       url: http://ai-service:50051
+      connect_timeout: 360000 
+      read_timeout: 360000
       routes:
           - name: ai-service-route
             paths:
@@ -28,6 +23,8 @@ services:
 
     - name: modjot-ai
       url: http://10.4.56.53:11434
+      connect_timeout: 360000 
+      read_timeout: 360000
       routes:
           - name: modjot-ai-route
             paths:
