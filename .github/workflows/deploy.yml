@@ -51,20 +51,16 @@ jobs:
           GRPC_ADDR=${{ vars.GRPC_ADDR || ':50051' }}
           OPENTYPHOON_API_KEY=${{ secrets.OPENTYPHOON_API_KEY }}
           OLLAMA_PORT=${{ vars.OLLAMA_PORT || '11434' }}
-          OLLAMA_API_URL=${{ vars.OLLAMA_API_URL || 'modjot-ai:11434' }}
+          OLLAMA_API_URL=${{ vars.OLLAMA_API_URL || 'localhost:11434' }}
           EOF
 
       - name: Stage deploy files into /modjot
         run: |
           mkdir -p /modjot/kong
-          mkdir -p /modjot/ollama
           cp -f .env docker-compose.prod.yml Makefile /modjot/
           cp -f kong/kong.yml /modjot/kong/kong.yml
-          cp -f ollama/Modelfile /modjot/ollama/Modelfile
-          cp -f ollama/run_ollama.sh /modjot/ollama/run_ollama.sh
-          chmod +x /modjot/ollama/run_ollama.sh
 
-          ls -lah /modjot /modjot/kong /modjot/ollama
+          ls -lah /modjot /modjot/kong
 
       - name: Login to GHCR (only needed if your images are private/internal)
         env:

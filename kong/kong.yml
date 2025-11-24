@@ -27,7 +27,7 @@ services:
             strip_path: true
 
     - name: modjot-ai
-      url: http://modjot-ai:11434
+      url: http://localhost:11434
       routes:
           - name: modjot-ai-route
             paths:
