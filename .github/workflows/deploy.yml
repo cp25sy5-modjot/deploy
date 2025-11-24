@@ -51,12 +51,12 @@ jobs:
           GRPC_ADDR=${{ vars.GRPC_ADDR || ':50051' }}
           OPENTYPHOON_API_KEY=${{ secrets.OPENTYPHOON_API_KEY }}
           OLLAMA_PORT=${{ vars.OLLAMA_PORT || '11434' }}
-          OLLAMA_API_URL=${{ vars.OLLAMA_API_URL || 'localhost:11434' }}
 
           KONG_DATABASE=${{ vars.KONG_DATABASE || 'off' }}
           KONG_DECLARATIVE_CONFIG=${{ vars.KONG_DECLARATIVE_CONFIG || '/etc/kong/kong.yml' }}
           KONG_PROXY_LISTEN=${{ vars.KONG_PROXY_LISTEN || '0.0.0.0:8000,0.0.0.0:8443 ssl' }}
           KONG_ADMIN_LISTEN=${{ vars.KONG_ADMIN_LISTEN || '0.0.0.0:8001' }}
+          HOST_IP=${{ secrets.HOST_IP }}
           EOF
 
       - name: Stage deploy files into /modjot

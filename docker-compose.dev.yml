@@ -39,8 +39,6 @@ services:
   ai-service:
     image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:dev
     container_name: ai-service
-    # depends_on:
-    #   - modjot-ai
     env_file:
       - .env
     healthcheck:
@@ -51,15 +49,6 @@ services:
       start_period: 5s
     ports:
       - "50051:50051"
-
-  # modjot-ai:
-  #   image: ollama/ollama:latest
-  #   container_name: modjot-ai
-  #   ports:
-  #     - "${OLLAMA_PORT}:11434"
-  #   volumes:
-  #     - ./ollama:/app 
-  #   entrypoint: ["/bin/bash", "/app/run_ollama.sh"]
     
   kong:
     image: kong:3.6
