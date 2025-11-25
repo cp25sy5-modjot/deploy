@@ -11,16 +11,6 @@ services:
                 - /api/main-service
             strip_path: true
 
-    - name: ai-service
-      url: http://ai-service:50051
-      connect_timeout: 360000 
-      read_timeout: 360000
-      routes:
-          - name: ai-service-route
-            paths:
-                - /api/ai-service
-            strip_path: true
-
     - name: modjot-ai
       url: http://10.4.56.53:11434
       connect_timeout: 360000 
