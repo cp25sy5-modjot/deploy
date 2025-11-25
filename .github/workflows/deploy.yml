@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, linux, modjot-vm]  # <- matches your runner labels
+    runs-on: [self-hosted, Linux, modjot-dev]
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
