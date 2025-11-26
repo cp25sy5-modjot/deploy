@@ -57,6 +57,10 @@ jobs:
           KONG_PROXY_LISTEN=${{ vars.KONG_PROXY_LISTEN || '0.0.0.0:8000,0.0.0.0:8443 ssl' }}
           KONG_ADMIN_LISTEN=${{ vars.KONG_ADMIN_LISTEN || '0.0.0.0:8001' }}
           HOST_IP=${{ secrets.HOST_IP_PROD }}
+
+          REDIS_PORT=${{ vars.REDIS_PORT || '6379' }}
+          REDIS_ADDR=${{ vars.REDIS_ADDR || 'redis:6379' }}
+          UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
           EOF
 
       - name: Stage deploy files into /modjot
