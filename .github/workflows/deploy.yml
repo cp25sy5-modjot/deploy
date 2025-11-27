@@ -20,7 +20,7 @@ jobs:
       - name: Create .env from repo vars/secrets
         run: |
           cat > .env <<'EOF'
-          APP_ENV=${{ vars.APP_ENV || 'dev' }}
+          APP_ENV=${{ vars.APP_ENV || 'prod' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
 
