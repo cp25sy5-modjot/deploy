@@ -20,7 +20,7 @@ jobs:
       - name: Create .env from repo vars/secrets
         run: |
           cat > .env <<'EOF'
-          APP_ENV=${{ vars.APP_ENV || 'prod' }}
+          APP_ENV=${{ vars.APP_ENV || 'dev' }}
           FIBER_HOST=${{ vars.FIBER_HOST || '0.0.0.0' }}
           FIBER_PORT=${{ vars.FIBER_PORT || '8081' }}
 
@@ -57,12 +57,16 @@ jobs:
           KONG_PROXY_LISTEN=${{ vars.KONG_PROXY_LISTEN || '0.0.0.0:8000,0.0.0.0:8443 ssl' }}
           KONG_ADMIN_LISTEN=${{ vars.KONG_ADMIN_LISTEN || '0.0.0.0:8001' }}
           HOST_IP=${{ secrets.HOST_IP_PROD }}
+
+          REDIS_PORT=${{ vars.REDIS_PORT || '6379' }}
+          REDIS_ADDR=${{ vars.REDIS_ADDR || 'redis:6379' }}
+          UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
           EOF
 
       - name: Stage deploy files into /modjot
         run: |
           mkdir -p /modjot/kong
-          cp -f .env docker-compose.prod.yml Makefile /modjot/
+          cp -f .env docker-compose.dev.yml Makefile /modjot/
           cp -f kong/kong.yml /modjot/kong/kong.yml
 
           ls -lah /modjot /modjot/kong
@@ -78,6 +82,6 @@ jobs:
       - name: Deploy (pull & up without build)
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --no-build
+          docker compose -f docker-compose.dev.yml pull
+          docker compose -f docker-compose.dev.yml up -d --no-build
           docker image prune -af --filter "until=72h" || true

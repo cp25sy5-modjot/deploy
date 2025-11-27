@@ -25,6 +25,13 @@ services:
       postgres-db:
         condition: service_healthy
 
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "${REDIS_PORT}:6379"
+
   main-service:
     build: ../modjot-main-service
     container_name: main-service
@@ -33,8 +40,28 @@ services:
         condition: service_healthy
       ai-service:
         condition: service_healthy
+      redis:
+        condition: service_started
     env_file:
       - .env
+    volumes:
+      - uploads:/uploads
+
+  worker-service:
+    build: ../modjot-main-service
+    container_name: worker-service
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      ai-service:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    env_file:
+      - .env
+    command: ["/worker"]
+    volumes:
+      - uploads:/uploads
 
   ai-service:
     build: ../modjot-ai-wrapper-service
@@ -67,3 +94,4 @@ services:
 
 volumes:
   dbdata:
+  uploads:
