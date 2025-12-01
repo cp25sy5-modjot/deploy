@@ -82,6 +82,6 @@ jobs:
       - name: Deploy (pull & up without build)
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.dev.yml pull
-          docker compose -f docker-compose.dev.yml up -d --no-build
+          docker compose -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.prod.yml up -d --no-build
           docker image prune -af --filter "until=72h" || true
