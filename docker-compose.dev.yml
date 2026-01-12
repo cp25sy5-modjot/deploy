@@ -15,16 +15,23 @@ services:
       timeout: 5s
       retries: 5
 
-  pg-admin:
-    image: dpage/pgadmin4
-    container_name: pg-admin
-    env_file:
-      - .env
-    ports:
-      - "${PGADMIN_PORT}:80"
+  migrate:
+    image: migrate/migrate:4.17.1
+    container_name: db-migrate
     depends_on:
       postgres-db:
         condition: service_healthy
+    volumes:
+      - ./db/migrations:/migrations:ro
+    env_file:
+      - .env
+    command:
+      [
+        "-path=/migrations",
+        "-database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}?sslmode=disable",
+        "up"
+      ]
+    restart: "no"
 
   redis:
     image: redis:7-alpine
@@ -38,6 +45,8 @@ services:
     depends_on:
       postgres-db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       ai-service:
         condition: service_healthy
       redis:
@@ -46,7 +55,6 @@ services:
       - .env
     volumes:
       - uploads:/uploads
-      - ./db/migrations:/app/db/migrations
 
   worker-service:
     image: ghcr.io/cp25sy5-modjot/main-service:dev
@@ -54,6 +62,8 @@ services:
     depends_on:
       postgres-db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       ai-service:
         condition: service_healthy
       redis:

@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy to VM (self-hosted)
+name: Deploy to dev VM (self-hosted)
 
 on:
   push:
@@ -31,7 +31,6 @@ jobs:
           POSTGRES_DB=${{ vars.POSTGRES_DB || 'modjot' }}
           POSTGRES_PROTOCOL=${{ vars.POSTGRES_PROTOCOL || 'tcp' }}
           POSTGRES_SSL_MODE=${{ vars.POSTGRES_SSL_MODE || 'disable' }}
-          DB_MIGRATE_DRY_RUN=${{ vars.DB_MIGRATE_DRY_RUN || 'false' }}
           
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
@@ -64,14 +63,15 @@ jobs:
           UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
           EOF
 
-      - name: Stage deploy files into /modjot
+      - name: Stage deploy files
         run: |
-          mkdir -p /modjot/kong
-          cp -f .env docker-compose.dev.yml Makefile /modjot/
-          cp -f kong/kong.yml /modjot/kong/kong.yml
-          ls -lah /modjot /modjot/kong
+          mkdir -p /modjot/kong /modjot/db/init /modjot/db/migrations
+          cp -f .env docker-compose.dev.yml /modjot/
+          cp -f kong/kong.yml /modjot/kong/
+          cp -f db/init/* /modjot/db/init/
+          cp -f db/migrations/* /modjot/db/migrations/
 
-      - name: Login to GHCR (only needed if your images are private/internal)
+      - name: Login to GHCR
         env:
           CR_PAT: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -79,9 +79,32 @@ jobs:
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
           fi
 
-      - name: Deploy (pull & up without build)
+      - name: Pull images
         working-directory: /modjot
         run: |
           docker compose -f docker-compose.dev.yml pull
-          docker compose -f docker-compose.dev.yml up -d --no-build
+
+      - name: Run DB migrations
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml up --abort-on-container-exit migrate
+
+      - name: Clean migrate container
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml rm -f migrate || true
+
+      - name: Deploy application services
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml up -d \
+            postgres-db \
+            redis \
+            ai-service \
+            main-service \
+            worker-service \
+            kong
+
+      - name: Cleanup old images
+        run: |
           docker image prune -af --filter "until=72h" || true
