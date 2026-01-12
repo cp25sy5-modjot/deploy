@@ -1,5 +1,5 @@
 # .github/workflows/deploy.yml
-name: Deploy to VM (self-hosted)
+name: Deploy to prod VM (self-hosted)
 
 on:
   push:
@@ -64,15 +64,15 @@ jobs:
           UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
           EOF
 
-      - name: Stage deploy files into /modjot
+      - name: Stage deploy files
         run: |
-          mkdir -p /modjot/kong
-          cp -f .env docker-compose.prod.yml Makefile /modjot/
-          cp -f kong/kong.yml /modjot/kong/kong.yml
+          mkdir -p /modjot/kong /modjot/db/init /modjot/db/migrations
+          cp -f .env docker-compose.dev.yml /modjot/
+          cp -f kong/kong.yml /modjot/kong/
+          cp -f db/init/* /modjot/db/init/
+          cp -f db/migrations/* /modjot/db/migrations/
 
-          ls -lah /modjot /modjot/kong
-
-      - name: Login to GHCR (only needed if your images are private/internal)
+      - name: Login to GHCR
         env:
           CR_PAT: ${{ secrets.GHCR_READ_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -80,9 +80,37 @@ jobs:
             echo "$CR_PAT" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
           fi
 
-      - name: Deploy (pull & up without build)
+      # ✅ 1. pull images ก่อน
+      - name: Pull images
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.prod.yml pull
-          docker compose -f docker-compose.prod.yml up -d --no-build
+          docker compose -f docker-compose.dev.yml pull
+
+      # 🔥 2. RUN MIGRATION (ตรงนี้แหละที่ถาม)
+      - name: Run DB migrations
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml up --abort-on-container-exit migrate
+
+      # 🧹 3. CLEAN MIGRATE CONTAINER (fh;p = cleanup 😄)
+      - name: Clean migrate container
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml rm -f migrate || true
+
+      # 🚀 4. DEPLOY SERVICES จริง
+      - name: Deploy application services
+        working-directory: /modjot
+        run: |
+          docker compose -f docker-compose.dev.yml up -d \
+            postgres-db \
+            redis \
+            ai-service \
+            main-service \
+            worker-service \
+            kong
+
+      # (optional)
+      - name: Cleanup old images
+        run: |
           docker image prune -af --filter "until=72h" || true
