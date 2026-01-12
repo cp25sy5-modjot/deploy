@@ -46,6 +46,7 @@ services:
       - .env
     volumes:
       - uploads:/uploads
+      - ./db/migrations:/app/db/migrations
 
   worker-service:
     image: ghcr.io/cp25sy5-modjot/main-service:dev
