@@ -3,12 +3,12 @@ name: Deploy to VM (self-hosted)
 
 on:
   push:
-    branches: [ develop ]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:
   contents: read
-  packages: read    # needed to pull from GHCR with GITHUB_TOKEN
+  packages: read # needed to pull from GHCR with GITHUB_TOKEN
 
 jobs:
   deploy:
@@ -31,7 +31,8 @@ jobs:
           POSTGRES_DB=${{ vars.POSTGRES_DB || 'modjot' }}
           POSTGRES_PROTOCOL=${{ vars.POSTGRES_PROTOCOL || 'tcp' }}
           POSTGRES_SSL_MODE=${{ vars.POSTGRES_SSL_MODE || 'disable' }}
-
+          DB_MIGRATE_DRY_RUN=${{ vars.DB_MIGRATE_DRY_RUN || 'false' }}
+          
           GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
           ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
