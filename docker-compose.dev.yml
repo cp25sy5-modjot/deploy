@@ -93,7 +93,6 @@ services:
     container_name: kong
     depends_on:
       - main-service
-      - pg-admin
     environment:
       - KONG_DATABASE=off
       - KONG_DECLARATIVE_CONFIG=/etc/kong/kong.yml
