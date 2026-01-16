@@ -5,24 +5,6 @@ It supports three deployment modes: **Local**, **Development**, and **Production
 
 ---
 
-## 🧩 Local Deployment
-
-> Use this mode when you have **all repositories cloned locally** on your machine.
-
-### Run
-```bash
-make local
-```
-This command starts all services using local builds (`docker compose up`).
-
-### Stop
-```bash
-make local-down
-```
-This command stops and removes all running containers (`docker compose down`).
-
----
-
 ## 🧪 Development Deployment
 
 > Use this mode for **development or staging environments** where you **don’t have all repositories locally**.  
@@ -65,7 +47,6 @@ make prod-down
 
 | Mode | Start Command | Stop Command | Description | Image Tag |
 |------|----------------|---------------|--------------|------------|
-| **Local** | `make local` | `make local-down` | Build and run using local repositories | *(local build)* |
 | **Development** | `make dev` | `make dev-down` | Pull images for development/testing | `:dev` |
 | **Production** | `make prod` | `make prod-down` | Pull images for production deployment | `:latest` |
 
@@ -84,12 +65,6 @@ make prod-down
 Here’s an example snippet you can include in your `Makefile`:
 
 ```makefile
-local:
-	docker compose -f compose.local.yml up -d
-
-local-down:
-	docker compose -f compose.local.yml down
-
 dev:
 	docker compose -f compose.dev.yml up -d
 
@@ -114,4 +89,6 @@ prod-down:
 
 ---
 
+## Command for create database migration files
+migrate create -ext sql -dir db/migrations -seq scriptname\n         
 © 2025 — Deployment Automation by [Your Team Name]
