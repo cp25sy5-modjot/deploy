@@ -93,12 +93,12 @@ jobs:
       - name: Clean migrate container
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.dev.yml rm -f migrate || true
+          docker compose -f docker-compose.prod.yml rm -f migrate || true
 
       - name: Deploy application services
         working-directory: /modjot
         run: |
-          docker compose -f docker-compose.dev.yml up -d \
+          docker compose -f docker-compose.prod.yml up -d \
             postgres-db \
             redis \
             ai-service \
