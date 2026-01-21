@@ -1,0 +1,5 @@
+ALTER TABLE categories
+DROP COLUMN IF EXISTS icon;
+
+ALTER TABLE transactions
+DROP COLUMN IF EXISTS title;
