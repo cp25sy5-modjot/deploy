@@ -1,0 +1,6 @@
+ALTER TABLE categories
+ADD COLUMN icon VARCHAR;
+
+ALTER TABLE transactions
+ADD COLUMN title VARCHAR;
+
