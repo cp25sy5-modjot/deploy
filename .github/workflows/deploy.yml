@@ -57,11 +57,13 @@ jobs:
           KONG_DECLARATIVE_CONFIG=${{ vars.KONG_DECLARATIVE_CONFIG || '/etc/kong/kong.yml' }}
           KONG_PROXY_LISTEN=${{ vars.KONG_PROXY_LISTEN || '0.0.0.0:8000,0.0.0.0:8443 ssl' }}
           KONG_ADMIN_LISTEN=${{ vars.KONG_ADMIN_LISTEN || '0.0.0.0:8001' }}
+          KONG_NGINX_HTTP_CLIENT_MAX_BODY_SIZE=${{ vars.KONG_NGINX_HTTP_CLIENT_MAX_BODY_SIZE || '100m' }}
           HOST_IP=${{ secrets.HOST_IP_PROD }}
 
           REDIS_PORT=${{ vars.REDIS_PORT || '6379' }}
           REDIS_ADDR=${{ vars.REDIS_ADDR || 'redis:6379' }}
           UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
+          SIGNED_URL_SECRET=${{ secrets.SIGNED_URL_SECRET }}
           EOF
 
       - name: Stage deploy files
