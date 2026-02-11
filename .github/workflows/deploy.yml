@@ -62,6 +62,7 @@ jobs:
           REDIS_PORT=${{ vars.REDIS_PORT || '6379' }}
           REDIS_ADDR=${{ vars.REDIS_ADDR || 'redis:6379' }}
           UPLOAD_DIR=${{ vars.UPLOAD_DIR || './uploads' }}
+          SIGNED_URL_SECRET=${{ secrets.SIGNED_URL_SECRET }}
           EOF
 
       - name: Stage deploy files
