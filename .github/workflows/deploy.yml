@@ -86,6 +86,16 @@ jobs:
         run: |
           docker compose -f docker-compose.dev.yml pull
 
+      - name: Start postgres
+        working-directory: /modjot
+        run: docker compose -f docker-compose.prod.yml up -d postgres-db
+
+      - name: Wait for postgres
+        run: |
+          until docker exec postgres-db pg_isready -U $POSTGRES_USER; do
+            sleep 2
+          done
+
       - name: Run DB migrations
         working-directory: /modjot
         run: |
