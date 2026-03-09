@@ -20,7 +20,7 @@ CREATE TYPE interval_type AS ENUM (
 -- ========================================
 
 CREATE TABLE fix_costs (
-    fix_cost_id UUID PRIMARY KEY,
+    fix_cost_id VARCHAR PRIMARY KEY,
     user_id VARCHAR NOT NULL,
     title VARCHAR(255) NOT NULL,
     price NUMERIC(12,2) NOT NULL,
