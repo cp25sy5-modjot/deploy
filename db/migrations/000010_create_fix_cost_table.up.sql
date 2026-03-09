@@ -24,7 +24,7 @@ CREATE TABLE fix_costs (
     user_id VARCHAR NOT NULL,
     title VARCHAR(255) NOT NULL,
     price NUMERIC(12,2) NOT NULL,
-    category_id UUID NOT NULL,
+    category_id VARCHAR NOT NULL,
 
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP NULL,
