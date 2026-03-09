@@ -32,8 +32,7 @@ jobs:
           POSTGRES_PROTOCOL=${{ vars.POSTGRES_PROTOCOL || 'tcp' }}
           POSTGRES_SSL_MODE=${{ vars.POSTGRES_SSL_MODE || 'disable' }}
           
-          GOOGLE_AD_CLIENT_ID=${{ secrets.GOOGLE_AD_CLIENT_ID }}
-          GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
 
           ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
           REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
