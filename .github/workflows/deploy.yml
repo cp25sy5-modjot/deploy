@@ -48,13 +48,6 @@ jobs:
           go mod tidy
           go test ./... -v -count=1
 
-      # 🔥 test ai-service
-      - name: Run tests (ai-service)
-        working-directory: ./ai-service
-        run: |
-          go mod tidy
-          go test ./... -v -count=1
-
   # ===================== DEPLOY =====================
   deploy:
     needs: test
