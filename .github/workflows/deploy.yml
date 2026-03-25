@@ -11,8 +11,28 @@ permissions:
   packages: read # needed to pull from GHCR with GITHUB_TOKEN
 
 jobs:
+  # ===================== TEST =====================
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.6'
+
+      - name: Run tests
+        run: |
+          go test ./... -v -count=1
+
+  # ===================== DEPLOY =====================
   deploy:
+    needs: test # 🔥 สำคัญ: รอ test ผ่านก่อน
     runs-on: [self-hosted, Linux, modjot-prod]
+    
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
