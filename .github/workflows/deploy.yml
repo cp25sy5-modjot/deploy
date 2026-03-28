@@ -16,32 +16,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ infra repo (เดิม)
+      # infra repo 
       - name: Checkout infra repo
         uses: actions/checkout@v4
 
-      # 🔥 เพิ่ม: checkout main-service
+      # checkout main-service
       - name: Checkout main-service
         uses: actions/checkout@v4
         with:
           repository: cp25sy5-modjot/main-service
           path: main-service
-          token: ${{ secrets.PAT_TOKEN }} # 🔐 ถ้า private
-
-      # 🔥 เพิ่ม: checkout ai-service
-      - name: Checkout ai-service
-        uses: actions/checkout@v4
-        with:
-          repository: cp25sy5-modjot/ai-wrapper-service
-          path: ai-service
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }} 
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.24.6'
 
-      # 🔥 test main-service
+      #test main-service
       - name: Run tests (main-service)
         working-directory: ./main-service
         run: |
