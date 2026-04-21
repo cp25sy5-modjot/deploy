@@ -8,7 +8,7 @@ RENAME COLUMN remaining_runs TO max_run;
 -- 2) Rename constraint if exists
 -- ----------------------------------------
 ALTER TABLE fix_costs
-RENAME CONSTRAINT chk_remaining_runs_positive
+RENAME CONSTRAINT chk_remaining_runs_non_negative
 TO chk_max_run_positive;
 
 -- ----------------------------------------
