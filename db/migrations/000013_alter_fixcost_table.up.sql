@@ -25,7 +25,7 @@ DROP CONSTRAINT IF EXISTS chk_max_run_positive;
 
 ALTER TABLE fix_costs
 ADD CONSTRAINT chk_max_run_positive
-CHECK (max_run IS NULL OR max_run > 0);
+CHECK (max_run IS NULL OR max_run >= 0);
 
 ALTER TABLE fix_costs
 ADD CONSTRAINT chk_run_count_positive
