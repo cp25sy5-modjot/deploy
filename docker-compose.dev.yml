@@ -79,6 +79,8 @@ services:
     container_name: ai-service
     env_file:
       - .env
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "/bin/grpc_health_probe", "-addr=:50051", "-rpc-timeout=1s"]
       interval: 5s
