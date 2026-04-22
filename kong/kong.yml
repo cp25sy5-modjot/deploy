@@ -1,4 +1,4 @@
-_format_version: "3.0"
+_format_version: '3.0'
 
 services:
     - name: main-service
@@ -10,8 +10,8 @@ services:
             strip_path: true
 
     - name: modjot-ai
-      url: http://10.4.56.53:11434
-      connect_timeout: 360000 
+      url: http://127.0.0.1:11434
+      connect_timeout: 360000
       read_timeout: 360000
       routes:
           - name: modjot-ai-route
