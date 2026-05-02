@@ -26,15 +26,15 @@ services:
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./db/backup:/backup
-      - ./db/scripts/backup.sh:/backup.sh:ro
+      - /modjot/db/backup:/backup
+      - /modjot/db/scripts:/scripts:ro
     entrypoint: ["/bin/sh", "-c"]
     command: >
-      chmod +x /backup.sh &&
-      while true; do
-        /backup.sh;
-        sleep 3600;
-      done
+      command: >
+        while true; do
+          sh /backup.sh;
+          sleep 3600;
+        done
       
   migrate:
     image: migrate/migrate:latest
