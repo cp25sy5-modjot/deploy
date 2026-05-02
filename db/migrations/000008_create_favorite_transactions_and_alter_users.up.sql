@@ -1,9 +1,9 @@
 CREATE TABLE favorite_items (
-    favorite_id VARCHAR PRIMARY KEY,
-    user_id        VARCHAR NOT NULL,
-    title          VARCHAR NOT NULL,
+    favorite_id VARCHAR(255) PRIMARY KEY,
+    user_id        VARCHAR(255) NOT NULL,
+    title          VARCHAR(20) NOT NULL,
     price          NUMERIC(12,2),
-    category_id    VARCHAR,
+    category_id    VARCHAR(255),
     position       INTEGER NOT NULL,
     created_at     TIMESTAMP NOT NULL DEFAULT now(),
     updated_at     TIMESTAMP NOT NULL DEFAULT now(),

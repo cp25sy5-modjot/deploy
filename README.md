@@ -92,4 +92,8 @@ prod-down:
 ## Command for create database migration files
 migrate create -ext sql -dir db/migrations -seq scriptname\n      
 
-© 2025 — Deployment Automation by [Your Team Name]
+## Database Backup & Recovery
+./db/scripts/backup.sh (use latest backup file)
+./db/scripts/restore.sh db/backup/mydb.dump (select file to restore)
+
+© 2025 — Deployment Automation by [CP25SY5: ModJot Team]
