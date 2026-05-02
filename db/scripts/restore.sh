@@ -1,16 +1,16 @@
-#!/bin/bash
+#!/bin/sh
 
-CONTAINER="postgres-db"
-DB_NAME=${POSTGRES_DB:-mydb}
+DB_HOST="postgres-db"
+DB_NAME=${POSTGRES_DB:-postgres}
 DB_USER=${POSTGRES_USER:-postgres}
-BACKUP_DIR="./db/backup"
+BACKUP_DIR="/backup"
 
 # ถ้ามี argument → ใช้ไฟล์นั้น
 if [ -n "$1" ]; then
   FILE="$1"
 else
-  # auto: หาไฟล์ล่าสุด
-  FILE=$(ls -t $BACKUP_DIR/*.dump 2>/dev/null | head -n 1)
+  # หาไฟล์ล่าสุด
+  FILE=$(ls -t $BACKUP_DIR/*.dump.gz 2>/dev/null | head -n 1)
 fi
 
 if [ -z "$FILE" ]; then
@@ -18,15 +18,13 @@ if [ -z "$FILE" ]; then
   exit 1
 fi
 
-echo "Using backup file: $FILE"
+echo "Restoring from $FILE..."
 
-echo "Dropping database..."
-docker exec -i $CONTAINER psql -U $DB_USER -c "DROP DATABASE IF EXISTS $DB_NAME;"
+# recreate db
+psql -h $DB_HOST -U $DB_USER -c "DROP DATABASE IF EXISTS $DB_NAME;"
+psql -h $DB_HOST -U $DB_USER -c "CREATE DATABASE $DB_NAME;"
 
-echo "Creating database..."
-docker exec -i $CONTAINER psql -U $DB_USER -c "CREATE DATABASE $DB_NAME;"
-
-echo "Restoring..."
-cat $FILE | docker exec -i $CONTAINER pg_restore -U $DB_USER -d $DB_NAME
+# restore
+gunzip -c "$FILE" | pg_restore -h $DB_HOST -U $DB_USER -d $DB_NAME
 
 echo "Restore completed ✅"

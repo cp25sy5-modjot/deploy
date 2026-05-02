@@ -100,12 +100,14 @@ jobs:
 
       - name: Stage deploy files
         run: |
-          mkdir -p /modjot/kong /modjot/db/init /modjot/db/migrations /modjot/db/scripts /modjot/db/backup
+          mkdir -p /modjot/kong /modjot/db/init /modjot/db/migrations /modjot/db/scripts /modjot/db/backup /modjot/db/cron
           cp -f .env docker-compose.prod.yml /modjot/
           cp -f kong/kong.yml /modjot/kong/
           cp -f db/init/* /modjot/db/init/
           cp -f db/migrations/* /modjot/db/migrations/
           cp -f db/scripts/* /modjot/db/scripts/
+          cp -f Dockerfile.backup /modjot/
+          cp -f db/cron/backup-cron /modjot/db/cron/ || true
 
       - name: Login to GHCR
         env:
@@ -127,6 +129,10 @@ jobs:
         working-directory: /modjot
         run: docker compose -f docker-compose.prod.yml rm -f migrate || true
 
+      - name: Build backup service image
+        working-directory: /modjot
+        run: docker compose -f docker-compose.prod.yml build pg-backup || true
+
       - name: Deploy application services
         working-directory: /modjot
         run: |
@@ -136,8 +142,10 @@ jobs:
             ai-service \
             main-service \
             worker-service \
-            kong \
-            pg-backup
+            kong 
+
+      - name: Log deployed services
+        run: docker logs pg-backup --tail 20
 
       - name: Cleanup old images
         run: docker image prune -af --filter "until=72h" || true

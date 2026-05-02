@@ -90,10 +90,26 @@ prod-down:
 ---
 
 ## Command for create database migration files
+
 migrate create -ext sql -dir db/migrations -seq scriptname\n      
 
-## Database Backup & Recovery
-./db/scripts/backup.sh (use latest backup file)
-./db/scripts/restore.sh db/backup/mydb.dump (select file to restore)
+## Database Backup System
+
+This project includes an automated PostgreSQL backup system.
+
+### Features
+- Hourly backups using cron
+- Compressed `.dump.gz` format
+- Automatic cleanup (7 days retention)
+- Manual and automatic restore
+
+### Backup
+Backups are executed automatically every hour.
+
+### Restore (latest)
+docker exec -it pg-backup sh /scripts/restore.sh
+
+### Restore (specific file)
+docker exec -it pg-backup sh /scripts/restore.sh /backup/<filename>.dump.gz
 
 © 2025 — Deployment Automation by [CP25SY5: ModJot Team]

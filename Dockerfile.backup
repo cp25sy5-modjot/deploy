@@ -1,0 +1,11 @@
+FROM postgres:16-alpine
+
+RUN apk add --no-cache tzdata busybox-suid
+
+# copy scripts
+COPY db/scripts /scripts
+COPY db/cron/backup-cron /etc/crontabs/root
+
+RUN chmod +x /scripts/*.sh
+
+CMD ["crond", "-f", "-l", "8"]

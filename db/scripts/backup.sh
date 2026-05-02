@@ -1,22 +1,25 @@
 #!/bin/sh
 
+set -e
+
 DB_HOST="postgres-db"
 DB_NAME=${POSTGRES_DB:-postgres}
 DB_USER=${POSTGRES_USER:-postgres}
+BACKUP_DIR="/backup"
+LOG_FILE="/var/log/backup.log"
 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+FILE="$BACKUP_DIR/backup_$TIMESTAMP.dump.gz"
 
-echo "Running backup..."
+echo "[`date`] Starting backup..." >> $LOG_FILE
 
+# ทำ backup
 pg_dump -h $DB_HOST -U $DB_USER $DB_NAME \
-  | gzip > /backup/backup_$TIMESTAMP.dump.gz
+  | gzip > "$FILE"
 
-if [ $? -eq 0 ]; then
-  echo "Backup done!"
-else
-  echo "Backup failed ❌"
-  exit 1
-fi
+echo "[`date`] Backup saved: $FILE" >> $LOG_FILE
 
-# ลบไฟล์เก่า
-find /backup -type f -mtime +7 -name "*.dump.gz" -delete
+# cleanup (ลบไฟล์เก่าเกิน 7 วัน)
+find $BACKUP_DIR -type f -name "*.dump.gz" -mtime +7 -delete
+
+echo "[`date`] Cleanup completed" >> $LOG_FILE
