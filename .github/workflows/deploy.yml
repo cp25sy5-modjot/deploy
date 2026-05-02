@@ -142,7 +142,8 @@ jobs:
             ai-service \
             main-service \
             worker-service \
-            kong 
+            kong \
+            pg-backup 
 
       - name: Log deployed services
         run: docker logs pg-backup --tail 20
