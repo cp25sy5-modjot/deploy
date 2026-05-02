@@ -6,3 +6,4 @@ CREATE INDEX idx_items_transaction_id
     ON transaction_items(transaction_id);
 CREATE INDEX idx_items_category_id
     ON transaction_items(category_id);
+

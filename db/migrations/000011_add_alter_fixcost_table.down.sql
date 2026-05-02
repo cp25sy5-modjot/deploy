@@ -10,4 +10,3 @@ DROP COLUMN IF EXISTS run_date,
 DROP COLUMN IF EXISTS fix_cost_id;
 
 DROP TABLE IF EXISTS push_tokens;
-
