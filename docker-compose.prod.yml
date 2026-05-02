@@ -26,15 +26,17 @@ services:
     environment:
       PGPASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - /modjot/db/backup:/backup
-      - /modjot/db/scripts:/scripts:ro
+      - ./db/backup:/backup
     entrypoint: ["/bin/sh", "-c"]
     command: >
-      command: >
-        while true; do
-          sh /backup.sh;
-          sleep 3600;
-        done
+      while true; do
+        echo "Running backup...";
+        pg_dump -h postgres-db -U ${POSTGRES_USER} ${POSTGRES_DB} \
+          | gzip > /backup/backup_$(date +%Y%m%d_%H%M%S).dump.gz;
+
+        echo "Backup done!";
+        sleep 3600;
+      done
       
   migrate:
     image: migrate/migrate:latest
