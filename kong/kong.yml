@@ -27,5 +27,5 @@ plugins:
       account_email: modjot.capstone@gmail.com
       domains:
         - bscit.sit.kmutt.ac.th
-      storage: kong
+      storage: shm
       tos_accepted: true
