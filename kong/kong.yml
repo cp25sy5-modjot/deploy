@@ -18,3 +18,12 @@ services:
             paths:
                 - /api/modjot-ai
             strip_path: true
+
+plugins:
+  - name: acme
+    config:
+      account_email: modjot.capstone@gmail.com
+      domains:
+        - bscit.sit.kmutt.ac.th
+      storage: kong
+      tos_accepted: true
