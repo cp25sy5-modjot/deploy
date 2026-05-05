@@ -9,6 +9,9 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
+      - ./db/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./db/wal_archive:/wal_archive
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -44,7 +47,7 @@ services:
       [
         "-path=/migrations",
         "-database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}?sslmode=disable",
-        "up",
+        "up"
       ]
     restart: "no"
 
@@ -55,7 +58,7 @@ services:
       - "${REDIS_PORT}:6379"
 
   main-service:
-    image: ghcr.io/cp25sy5-modjot/main-service:dev
+    image: ghcr.io/cp25sy5-modjot/main-service:latest
     container_name: main-service
     depends_on:
       postgres-db:
@@ -72,7 +75,7 @@ services:
       - uploads:/uploads
 
   worker-service:
-    image: ghcr.io/cp25sy5-modjot/main-service:dev
+    image: ghcr.io/cp25sy5-modjot/main-service:latest
     container_name: worker-service
     depends_on:
       postgres-db:
@@ -90,12 +93,12 @@ services:
       - uploads:/uploads
 
   ai-service:
-    image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:dev
+    image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:latest
     container_name: ai-service
     env_file:
       - .env
     extra_hosts:
-    - "host.docker.internal:host-gateway"
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "/bin/grpc_health_probe", "-addr=:50051", "-rpc-timeout=1s"]
       interval: 5s
