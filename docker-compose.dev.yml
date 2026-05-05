@@ -9,9 +9,7 @@ services:
     volumes:
       - dbdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d:ro
-      - ./db/postgresql.conf:/etc/postgresql/postgresql.conf
       - ./db/wal_archive:/wal_archive
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
