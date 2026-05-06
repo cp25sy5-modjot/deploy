@@ -32,7 +32,7 @@ services:
       - ./db/backup:/backup
 
   migrate:
-    image: migrate/migrate:latest
+    image: migrate/migrate:dev
     container_name: db-migrate
     depends_on:
       postgres-db:
@@ -56,7 +56,7 @@ services:
       - "${REDIS_PORT}:6379"
 
   main-service:
-    image: ghcr.io/cp25sy5-modjot/main-service:latest
+    image: ghcr.io/cp25sy5-modjot/main-service:dev
     container_name: main-service
     depends_on:
       postgres-db:
@@ -73,7 +73,7 @@ services:
       - uploads:/uploads
 
   worker-service:
-    image: ghcr.io/cp25sy5-modjot/main-service:latest
+    image: ghcr.io/cp25sy5-modjot/main-service:dev
     container_name: worker-service
     depends_on:
       postgres-db:
@@ -91,7 +91,7 @@ services:
       - uploads:/uploads
 
   ai-service:
-    image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:latest
+    image: ghcr.io/cp25sy5-modjot/ai-wrapper-service:dev
     container_name: ai-service
     env_file:
       - .env
