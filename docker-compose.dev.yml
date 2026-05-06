@@ -32,7 +32,7 @@ services:
       - ./db/backup:/backup
 
   migrate:
-    image: migrate/migrate:dev
+    image: migrate/migrate:latest
     container_name: db-migrate
     depends_on:
       postgres-db:
